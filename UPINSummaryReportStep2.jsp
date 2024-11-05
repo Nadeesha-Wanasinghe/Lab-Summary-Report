@@ -25,6 +25,7 @@
 <%@ page import="eHospitalLab.*" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Arrays" %>
 <%@ page errorPage="/ErrorScreen.jsp" %>
 
 <body class="optionsTop" topmargin="0" leftmargin="0">
@@ -52,9 +53,9 @@
             String dayFromDate = request.getParameter("dateFrom");
             String dayToDate = request.getParameter("dateTo");
 
-            System.out.println("upin >> "+ upin);
-            System.out.println("dateFrom >> "+ dayFromDate);
-            System.out.println("dateTo >> "+ dayToDate);
+            System.out.println("upin >> " + upin);
+            System.out.println("dateFrom >> " + dayFromDate);
+            System.out.println("dateTo >> " + dayToDate);
 
             List<String> dateColumns = new ArrayList<String>();
             List<String[]> transformedData = new ArrayList<String[]>();
@@ -96,11 +97,13 @@
                         + "WHERE LI.UPIN = '"+upin+"' AND LI.INVOICE_NO = LBR.INVOICE_NO "
                         + "AND LBR.LAB_REF_NO = LR.LAB_REF_NO AND LR.TEST_ID = LT.TEST_CODE "
                         + "AND LI.TXN_DATE BETWEEN TO_DATE('"+dayFromDate+"', 'DD/MM/YYYY') AND TO_DATE('"+dayToDate+"', 'DD/MM/YYYY') AND LI.STATUS = 1 "
-                        + "ORDER BY TXN_DATE, TEST_CODE";
+                        + "ORDER BY TEST_CODE, TXN_DATE";
 
                 conn.connectToDB();
                 rsH = conn.query(queryH);
-                int no = 1;
+                int no = 0;
+                String oldTestCode = "";
+                String[] row = new String[1];
                 while (rsH.next()) {
 
                     String testCode = rsH.getString("TEST_CODE");
@@ -113,22 +116,39 @@
 
                     if (!dateColumns.contains(testDate)) {
                         dateColumns.add(testDate);
+
+                        String[] newRow = new String[row.length + 1];
+                        for(int n = 0; n < row.length; n++) {
+                          newRow[n] = row[n];
+                        }
+                        row = newRow;
                     }
 
-                    String[] row = new String[5 + dateColumns.size()];
+                    if (!oldTestCode.equals(testCode)){
+                        no++;
+                        if (no != 1){
+                            transformedData.add(row);
+                        }
+//                    }
+                    row = new String[5 + dateColumns.size()];
                     row[0] = no+".)";
                     row[1] = testCode;
                     row[2] = testName;
                     row[3] = units;
                     row[4] = normalRange;
 //                    row[4] = patientType;
-
+                    oldTestCode = testCode;
+//                    transformedData.add(row);
+                    }
                     int dateIndex = dateColumns.indexOf(testDate) + 5;
                     row[dateIndex] = result;
+//                    System.out.println("row array : "+ Arrays.toString(row));
 
-                    transformedData.add(row);
-                    no++;
+//                    transformedData.add(row);
+//                    no++;
                 }
+                            transformedData.add(row);
+
                 conn.flushStmtRs();
             } catch (Exception e) {
                 conn.flushStmtRs();
@@ -143,13 +163,13 @@
 
         <table width="90%" border="0" cellspacing="0" cellpadding="4" class="bodyTable" align="center">
             <thead>
-            <tr  height="22" class="tableTitle" valign="middle">
+            <tr height="22" class="tableTitle" valign="middle">
                 <th align="left">#</th>
                 <th align="left">Test Code</th>
                 <th align="left">Test Name</th>
                 <th align="left">Unit</th>
                 <th align="left">Normal Range</th>
-<%--                <th>Patient Type</th>--%>
+                <%--                <th>Patient Type</th>--%>
                 <%
                     for (int i = 0; i < dateColumns.size(); i++) {
                 %>
@@ -162,7 +182,7 @@
             </thead>
             <tbody>
             <%
-                String[] row2 = new String[dateColumns.size()+5];
+                String[] row2 = new String[dateColumns.size() + 5];
                 String align = "";
                 for (int j = 0; j < transformedData.size(); j++) {
                     String[] row = transformedData.get(j);
@@ -170,13 +190,14 @@
                     for (int k = 0; k < row.length; k++) {
                         row2[k] = row[k];
                     }
+                    System.out.println("array list>> : " + Arrays.toString(row2));
             %>
             <tr>
                 <%
                     for (int i = 0; i < row2.length; i++) {
-                        if (i<5){
+                        if (i < 5) {
                             align = "left";
-                        }else{
+                        } else {
                             align = "center";
                         }
                 %>
@@ -193,7 +214,7 @@
         </table>
 </form>
 <%
-    }
+        }
     }
 %>
 <br>
