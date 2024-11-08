@@ -27,7 +27,15 @@
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Arrays" %>
 <%@ page import="java.util.Collections" %>
+<%@ page import="java.util.*" %>
+<%@ page import="java.text.ParseException" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.Date" %>
 <%@ page errorPage="/ErrorScreen.jsp" %>
+<%--import java.util.*;--%>
+<%--import java.text.ParseException;--%>
+<%--import java.text.SimpleDateFormat;--%>
+<%--import java.util.Date;--%>
 
 <body class="optionsTop" topmargin="0" leftmargin="0">
 
@@ -143,27 +151,56 @@
                 int no = 0;
                 String oldTestCode = "";
                 String[] row = new String[0];
-                System.out.println("gggg2>>>");
+//                System.out.println("gggg2>>>");
                 System.out.println(rsH.isBeforeFirst());
 
                 while (rsH.next()){
+                    String invNo = rsH.getString("INVOICE_NO");
                     String testDate = rsH.getString("TEST_DATE");
-                    if (!dateColumns.contains(testDate)) {
-                        dateColumns.add(testDate);
 
-//                        String[] newRow = new String[row.length + 1];
-//                        for(int n = 0; n < row.length; n++) {
-//                          newRow[n] = row[n];
-//                        }
-//                        row = newRow;
+
+                        if (!refNos.contains(invNo)){
+                        refNos.add(invNo);
+                        String[] refArray = new String[2];
+                        refArray[0] = testDate;
+                        refArray[1] = invNo;
+                        refNoAndDate.add(refArray);
                     }
                 }
-                        Collections.sort(dateColumns);
+                System.out.println("refNoAndDate2> ");
+
+                for (String[] refNoAndDate2 : refNoAndDate){
+                    System.out.println(Arrays.toString(refNoAndDate2));
+                }
+
+                final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+        Collections.sort(refNoAndDate, new Comparator<String[]>() {
+            @Override
+            public int compare(String[] a, String[] b) {
+                try {
+                    Date dateA = formatter.parse(a[0]);
+                    Date dateB = formatter.parse(b[0]);
+
+                    return dateA.compareTo(dateB);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    return 0;
+                }
+            }
+        });
+
+                System.out.println("refNoAndDate3> ");
+
+          for (String[] refNoAndDate2 : refNoAndDate){
+                    System.out.println(Arrays.toString(refNoAndDate2));
+                }
 
 
                 rsH = conn.query(queryH);
+
                 while (rsH.next()) {
-                    System.out.println("got in >J");
+//                    System.out.println("got in >J");
 
                     String invNo = rsH.getString("INVOICE_NO");
                     String testCode = rsH.getString("TEST_CODE");
@@ -174,32 +211,32 @@
                     String testDate = rsH.getString("TEST_DATE");
                     String result = rsH.getString("RESULTS");
 
-//                    if (!dateColumns.contains(testDate)) {
-//                        dateColumns.add(testDate);
-//
-//                        Collections.sort(dateColumns);
-//                        for(int i = 0; i < dateColumns.size(); i++) {
-//                            if (i==0){
-//                            System.out.print("Date array : ");
-//                            }
-//                          System.out.print(dateColumns.get(i) + ", ");
-//                        }
-////                        System.out.println("date array>> "+dateColumns.toString());
-//
-//                        String[] newRow = new String[row.length + 1];
-//                        for(int n = 0; n < row.length; n++) {
-//                          newRow[n] = row[n];
-//                        }
-//                        row = newRow;
-//                    }
+                    if (!dateColumns.contains(testDate)) {
+                        dateColumns.add(testDate);
 
-                    if (!refNos.contains(invNo)){
-                        refNos.add(invNo);
-                        String[] refArray = new String[2];
-                        refArray[0] = testDate;
-                        refArray[1] = invNo;
-                        refNoAndDate.add(refArray);
+                        Collections.sort(dateColumns);
+                        for(int i = 0; i < dateColumns.size(); i++) {
+                            if (i==0){
+                            System.out.print("Date array : ");
+                            }
+                          System.out.print(dateColumns.get(i) + ", ");
+                        }
+//                        System.out.println("date array>> "+dateColumns.toString());
+
+                        String[] newRow = new String[row.length + 1];
+                        for(int n = 0; n < row.length; n++) {
+                          newRow[n] = row[n];
+                        }
+                        row = newRow;
                     }
+
+//                    if (!refNos.contains(invNo)){
+//                        refNos.add(invNo);
+//                        String[] refArray = new String[2];
+//                        refArray[0] = testDate;
+//                        refArray[1] = invNo;
+//                        refNoAndDate.add(refArray);
+//                    }
 
                     if (!oldTestCode.equals(testCode)){
                         no++;
