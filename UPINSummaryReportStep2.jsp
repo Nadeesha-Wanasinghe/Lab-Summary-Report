@@ -196,7 +196,6 @@
                     System.out.println(Arrays.toString(refNoAndDate2));
                 }
 
-
                 rsH = conn.query(queryH);
 
                 while (rsH.next()) {
@@ -211,24 +210,24 @@
                     String testDate = rsH.getString("TEST_DATE");
                     String result = rsH.getString("RESULTS");
 
-                    if (!dateColumns.contains(testDate)) {
-                        dateColumns.add(testDate);
-
-                        Collections.sort(dateColumns);
-                        for(int i = 0; i < dateColumns.size(); i++) {
-                            if (i==0){
-                            System.out.print("Date array : ");
-                            }
-                          System.out.print(dateColumns.get(i) + ", ");
-                        }
-//                        System.out.println("date array>> "+dateColumns.toString());
-
-                        String[] newRow = new String[row.length + 1];
-                        for(int n = 0; n < row.length; n++) {
-                          newRow[n] = row[n];
-                        }
-                        row = newRow;
-                    }
+//                    if (!dateColumns.contains(testDate)) {
+//                        dateColumns.add(testDate);
+//
+//                        Collections.sort(dateColumns);
+//                        for(int i = 0; i < dateColumns.size(); i++) {
+//                            if (i==0){
+//                            System.out.print("Date array : ");
+//                            }
+//                          System.out.print(dateColumns.get(i) + ", ");
+//                        }
+////                        System.out.println("date array>> "+dateColumns.toString());
+//
+//                        String[] newRow = new String[row.length + 1];
+//                        for(int n = 0; n < row.length; n++) {
+//                          newRow[n] = row[n];
+//                        }
+//                        row = newRow;
+//                    }
 
 //                    if (!refNos.contains(invNo)){
 //                        refNos.add(invNo);
@@ -244,7 +243,7 @@
                             transformedData.add(row);
                         }
 //                    }
-                    row = new String[5 + dateColumns.size()];
+                    row = new String[5 + refNoAndDate.size()];
                     row[0] = no+".)";
                     row[1] = testCode;
                     row[2] = testName;
@@ -254,8 +253,15 @@
                     oldTestCode = testCode;
 //                    transformedData.add(row);
                     }
-                    int dateIndex = dateColumns.indexOf(testDate) + 5;
-                    row[dateIndex] = result;
+
+                    for(int i = 0; i < refNoAndDate.size(); i++) {
+                      if (refNoAndDate.get(i)[1].equals(invNo)){
+                            row[i+5] = result;
+                      }
+                    }
+
+//                    int dateIndex = dateColumns.indexOf(testDate) + 5;
+//                    row[dateIndex] = result;
 //                    System.out.println("row array : "+ Arrays.toString(row));
 
 //                    transformedData.add(row);
@@ -289,18 +295,26 @@
                 <%
 
 
-                    for (int i = 0; i < dateColumns.size(); i++) {
+                    for (int i = 0; i < refNoAndDate.size(); i++) {
                 %>
-                <th align="center"><%= dateColumns.get(i) %><br>
+                <th align="center">
+                    <%=
+                        refNoAndDate.get(i)[0]
+                                %>
+                    <br>
+                    <%=
+                        refNoAndDate.get(i)[1]
+                     %>
+<%--                    <br>--%>
 
-                    <%
-                        for (int t = 0; t < refNoAndDate.size(); t++) {
-                            String[] refArray2 = refNoAndDate.get(t);
-                            if (refArray2[0].equals(dateColumns.get(i))) {
-                                out.println(refArray2[1]);
-                            }
-                        }
-                    %>
+<%--                    <%--%>
+<%--                        for (int t = 0; t < refNoAndDate.size(); t++) {--%>
+<%--                            String[] refArray2 = refNoAndDate.get(t);--%>
+<%--                            if (refArray2[0].equals(dateColumns.get(i))) {--%>
+<%--                                out.println(refArray2[1]);--%>
+<%--                            }--%>
+<%--                        }--%>
+<%--                    %>--%>
 
                 </th>
                 <%
@@ -310,25 +324,25 @@
             </thead>
             <tbody>
             <%
-                String[] row2 = new String[dateColumns.size() + 5];
+//                String[] row2 = new String[dateColumns.size() + 5];
                 String align = "";
                 for (int j = 0; j < transformedData.size(); j++) {
                     String[] row = transformedData.get(j);
 
-                    for (int k = 0; k < row.length; k++) {
-                        row2[k] = row[k];
-                    }
+//                    for (int k = 0; k < row.length; k++) {
+//                        row2[k] = row[k];
+//                    }
             %>
             <tr>
                 <%
-                    for (int i = 0; i < row2.length; i++) {
+                    for (int i = 0; i < row.length; i++) {
                         if (i < 5) {
                             align = "left";
                         } else {
                             align = "center";
                         }
                 %>
-                <td align="<%=align%>" class="rowgrey"><%= (row2[i] != null ? row2[i] : "-") %>
+                <td align="<%=align%>" class="rowgrey"><%= (row[i] != null ? row[i] : "-") %>
                 </td>
                 <%
                     }
