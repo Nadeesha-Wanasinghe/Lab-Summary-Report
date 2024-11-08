@@ -26,6 +26,7 @@
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Arrays" %>
+<%@ page import="java.util.Collections" %>
 <%@ page errorPage="/ErrorScreen.jsp" %>
 
 <body class="optionsTop" topmargin="0" leftmargin="0">
@@ -53,12 +54,10 @@
             String dayFromDate = request.getParameter("dateFrom");
             String dayToDate = request.getParameter("dateTo");
 
-            System.out.println("upin >> " + upin);
-            System.out.println("dateFrom >> " + dayFromDate);
-            System.out.println("dateTo >> " + dayToDate);
-
             List<String> dateColumns = new ArrayList<String>();
+            List<String> refNos = new ArrayList<String>();
             List<String[]> transformedData = new ArrayList<String[]>();
+            List<String[]> refNoAndDate = new ArrayList<String[]>();
             EChannelDB conn = new EChannelDB();
 
 %>
@@ -82,30 +81,91 @@
 
             try {
                 ResultSet rsH = null;
-                System.out.println("upin>> "+upin);
-                System.out.println("dayFromDate>> "+dayFromDate);
-                System.out.println("dayToDate>> "+dayToDate);
-                String queryH = "SELECT LI.INVOICE_NO, LT.TEST_CODE, LR.TEST_NAME AS TEST_NAME, "
-                        + "LT.UNITS AS UNITS, TO_CHAR(LI.TXN_DATE, 'YYYY-MM-DD') AS TEST_DATE, "
-                        + "LR.NORMAL_RESULTS AS RESULTS, "
-                        + "DECODE(LT.REF_LEVEL1, NULL, (SELECT NORMAL_LOW_VALUE FROM EHOS.LAB_TEST_REF_RANGES LRF "
-                        + "WHERE LT.TEST_CODE = LRF.TEST_CODE AND LRF.GENDER = 1 AND LRF.MAX_AGE_VAL = 150), LT.REF_LEVEL1) || '/' || "
-                        + "DECODE(LT.REF_LEVEL2, NULL, (SELECT NORMAL_HIGH_VALUE FROM EHOS.LAB_TEST_REF_RANGES LRF "
-                        + "WHERE LT.TEST_CODE = LRF.TEST_CODE AND LRF.GENDER = 1 AND LRF.MAX_AGE_VAL = 150), LT.REF_LEVEL2) AS NORMAL_RANGE, "
-                        + "CASE WHEN LI.INVOICE_NO LIKE 'NSL%' THEN 'INWARD' ELSE 'OPD' END AS PATIENT_TYPE "
-                        + "FROM EHOS.LAB_TEST_INVOICES LI, EHOS.LAB_TEST_BREAKDOWN LBR, EHOS.LAB_TEST_RESULTS LR, EHOS.LAB_TESTS LT "
-                        + "WHERE LI.UPIN = '"+upin+"' AND LI.INVOICE_NO = LBR.INVOICE_NO "
-                        + "AND LBR.LAB_REF_NO = LR.LAB_REF_NO AND LR.TEST_ID = LT.TEST_CODE "
-                        + "AND LI.TXN_DATE BETWEEN TO_DATE('"+dayFromDate+"', 'DD/MM/YYYY') AND TO_DATE('"+dayToDate+"', 'DD/MM/YYYY') AND LI.STATUS = 1 "
-                        + "ORDER BY TEST_CODE, TXN_DATE";
+                String queryH =  "SELECT LI.INVOICE_NO, " +
+                                    "       LT.TEST_CODE, " +
+                                    "       LR.TEST_NAME                                                     AS TEST_NAME, " +
+                                    "       LT.UNITS                                                         AS UNITS, " +
+                                    "       TO_CHAR(LI.TXN_DATE, 'YYYY-MM-DD')                               AS TEST_DATE, " +
+                                    "       LR.NORMAL_RESULTS                                                AS RESULTS, " +
+                                    "       DECODE(LT.REF_LEVEL1, NULL, (SELECT NORMAL_LOW_VALUE " +
+                                    "                                    FROM EHOS.LAB_TEST_REF_RANGES LRF " +
+                                    "                                    WHERE LT.TEST_CODE = LRF.TEST_CODE " +
+                                    " " +
+                                    " " +
+                                    "                                      AND LRF.GENDER IN (SELECT DECODE(UPI.GENDAR, 'MALE', '1', 'FEMALE', '2') " +
+                                    "                                                         FROM EHOS.UNQ_PATIENT_IDS UPI " +
+                                    "                                                         WHERE UPI.PIN_NO = '"+upin+"') " +
+                                    " " +
+                                    " " +
+                                    "                                      AND LRF.MIN_AGE_DAYS < (SELECT TRUNC(SYSDATE) - DOB " +
+                                    "                                                              FROM EHOS.UNQ_PATIENT_IDS UPI " +
+                                    "                                                              WHERE UPI.PIN_NO = '"+upin+"') " +
+                                    " " +
+                                    "                                      AND LRF.MAX_AGE_DAYS >= (SELECT TRUNC(SYSDATE) - DOB " +
+                                    "                                                               FROM EHOS.UNQ_PATIENT_IDS UPI " +
+                                    "                                                               WHERE UPI.PIN_NO = '"+upin+"')), LT.REF_LEVEL1) " +
+                                    "           || '/' || " +
+                                    "       DECODE(LT.REF_LEVEL2, NULL, (SELECT NORMAL_HIGH_VALUE " +
+                                    "                                    FROM EHOS.LAB_TEST_REF_RANGES LRF " +
+                                    "                                    WHERE LT.TEST_CODE = LRF.TEST_CODE " +
+                                    " " +
+                                    " " +
+                                    "                                      AND LRF.GENDER IN (SELECT DECODE(UPI.GENDAR, 'MALE', '1', 'FEMALE', '2') " +
+                                    "                                                         FROM EHOS.UNQ_PATIENT_IDS UPI " +
+                                    "                                                         WHERE UPI.PIN_NO = '"+upin+"') " +
+                                    " " +
+                                    " " +
+                                    "                                      AND LRF.MIN_AGE_DAYS < (SELECT TRUNC(SYSDATE) - DOB " +
+                                    "                                                              FROM EHOS.UNQ_PATIENT_IDS UPI " +
+                                    "                                                              WHERE UPI.PIN_NO = '"+upin+"') " +
+                                    " " +
+                                    "                                      AND LRF.MAX_AGE_DAYS >= (SELECT TRUNC(SYSDATE) - DOB " +
+                                    "                                                               FROM EHOS.UNQ_PATIENT_IDS UPI " +
+                                    "                                                               WHERE UPI.PIN_NO = '"+upin+"')), " +
+                                    "              LT.REF_LEVEL2)                                            AS NORMAL_RANGE, " +
+                                    " " +
+                                    " " +
+                                    "       CASE WHEN LI.INVOICE_NO LIKE 'NSL%' THEN 'INWARD' ELSE 'OPD' END AS PATIENT_TYPE " +
+                                    "FROM EHOS.LAB_TEST_INVOICES LI, " +
+                                    "     EHOS.LAB_TEST_BREAKDOWN LBR, " +
+                                    "     EHOS.LAB_TEST_RESULTS LR, " +
+                                    "     EHOS.LAB_TESTS LT " +
+                                    "WHERE LI.UPIN = '"+upin+"' " +
+                                    "  AND LI.INVOICE_NO = LBR.INVOICE_NO " +
+                                    "  AND LBR.LAB_REF_NO = LR.LAB_REF_NO " +
+                                    "  AND LR.TEST_ID = LT.TEST_CODE " +
+                                    "  AND LI.TXN_DATE BETWEEN TO_DATE('"+dayFromDate+"', 'DD/MM/YYYY') AND TO_DATE('"+dayToDate+"', 'DD/MM/YYYY') " +
+                                    "  AND LI.STATUS = 1 " +
+                                    "ORDER BY TEST_CODE, TXN_DATE";
 
                 conn.connectToDB();
                 rsH = conn.query(queryH);
                 int no = 0;
                 String oldTestCode = "";
-                String[] row = new String[1];
-                while (rsH.next()) {
+                String[] row = new String[0];
+                System.out.println("gggg2>>>");
+                System.out.println(rsH.isBeforeFirst());
 
+                while (rsH.next()){
+                    String testDate = rsH.getString("TEST_DATE");
+                    if (!dateColumns.contains(testDate)) {
+                        dateColumns.add(testDate);
+
+//                        String[] newRow = new String[row.length + 1];
+//                        for(int n = 0; n < row.length; n++) {
+//                          newRow[n] = row[n];
+//                        }
+//                        row = newRow;
+                    }
+                }
+                        Collections.sort(dateColumns);
+
+
+                rsH = conn.query(queryH);
+                while (rsH.next()) {
+                    System.out.println("got in >J");
+
+                    String invNo = rsH.getString("INVOICE_NO");
                     String testCode = rsH.getString("TEST_CODE");
                     String testName = rsH.getString("TEST_NAME");
                     String units = rsH.getString("UNITS");
@@ -114,14 +174,31 @@
                     String testDate = rsH.getString("TEST_DATE");
                     String result = rsH.getString("RESULTS");
 
-                    if (!dateColumns.contains(testDate)) {
-                        dateColumns.add(testDate);
+//                    if (!dateColumns.contains(testDate)) {
+//                        dateColumns.add(testDate);
+//
+//                        Collections.sort(dateColumns);
+//                        for(int i = 0; i < dateColumns.size(); i++) {
+//                            if (i==0){
+//                            System.out.print("Date array : ");
+//                            }
+//                          System.out.print(dateColumns.get(i) + ", ");
+//                        }
+////                        System.out.println("date array>> "+dateColumns.toString());
+//
+//                        String[] newRow = new String[row.length + 1];
+//                        for(int n = 0; n < row.length; n++) {
+//                          newRow[n] = row[n];
+//                        }
+//                        row = newRow;
+//                    }
 
-                        String[] newRow = new String[row.length + 1];
-                        for(int n = 0; n < row.length; n++) {
-                          newRow[n] = row[n];
-                        }
-                        row = newRow;
+                    if (!refNos.contains(invNo)){
+                        refNos.add(invNo);
+                        String[] refArray = new String[2];
+                        refArray[0] = testDate;
+                        refArray[1] = invNo;
+                        refNoAndDate.add(refArray);
                     }
 
                     if (!oldTestCode.equals(testCode)){
@@ -147,7 +224,9 @@
 //                    transformedData.add(row);
 //                    no++;
                 }
-                            transformedData.add(row);
+                if (row[0] != null){
+                    transformedData.add(row);
+                }
 
                 conn.flushStmtRs();
             } catch (Exception e) {
@@ -171,9 +250,21 @@
                 <th align="left">Normal Range</th>
                 <%--                <th>Patient Type</th>--%>
                 <%
+
+
                     for (int i = 0; i < dateColumns.size(); i++) {
                 %>
-                <th align="center"><%= dateColumns.get(i) %>
+                <th align="center"><%= dateColumns.get(i) %><br>
+
+                    <%
+                        for (int t = 0; t < refNoAndDate.size(); t++) {
+                            String[] refArray2 = refNoAndDate.get(t);
+                            if (refArray2[0].equals(dateColumns.get(i))) {
+                                out.println(refArray2[1]);
+                            }
+                        }
+                    %>
+
                 </th>
                 <%
                     }
@@ -190,7 +281,6 @@
                     for (int k = 0; k < row.length; k++) {
                         row2[k] = row[k];
                     }
-                    System.out.println("array list>> : " + Arrays.toString(row2));
             %>
             <tr>
                 <%
