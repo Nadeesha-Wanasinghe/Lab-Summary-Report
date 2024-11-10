@@ -97,10 +97,7 @@
                                onMouseOver="window.status='Date Picker'; overlib('Click here to choose a date from a one month pop-up calendar.'); return true;"
                                onMouseOut="window.status='';  return true;"><img
                                     src="/eHospitalCashier/images/calendaricon.gif" border="0" width="16"
-                                    height="16"></a>
-
-                            <div id="overDiv"
-                                 style="position:absolute; visibility:hidden; z-index:1000;"></div>-->
+                                    height="16"></a>-->
                         </td>
                     </tr>
                     <tr>
@@ -108,9 +105,6 @@
                     </tr>
                     <tr>
                         <td height="26" colspan="3" valign="middle" class="rowgrey" align="center">&nbsp;
-                            <%--                            <input type="submit" name="Submit" class="submitBut"--%>
-                            <%--                                   value="  View Report  " tabindex="1" onClick="submitform();this.disabled=true;"--%>
-                            <%--                                   id="btnDone">--%>
                         </td>
                         <td height="26" valign="middle" class="rowgrey" align="left">
                             <input type="submit" name="Submit" class="submitBut"

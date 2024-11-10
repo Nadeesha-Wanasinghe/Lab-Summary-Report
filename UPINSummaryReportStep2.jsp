@@ -4,18 +4,6 @@
 
     <title>eHospital Lab Portal</title>
 
-    <script language="JavaScript">
-        // function submitform() {
-        //     if (confirm("Do you want to continue?")) {
-        //         document.form1.target = "PopPrint";
-        //         open('', 'PopPrint', 'width=700,height=600,resizable=0,scrollbars=0');
-        //         document.forms.form1.submit();
-        //     }
-        //     // location.href = "home.jsp";
-        // }
-
-    </script>
-
     <link href="/eHospitalLab/eHosLabStyles.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -32,10 +20,7 @@
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
 <%@ page errorPage="/ErrorScreen.jsp" %>
-<%--import java.util.*;--%>
-<%--import java.text.ParseException;--%>
-<%--import java.text.SimpleDateFormat;--%>
-<%--import java.util.Date;--%>
+
 
 <body class="optionsTop" topmargin="0" leftmargin="0">
 
@@ -56,13 +41,11 @@
         String unitID = (String) sessions.getValue("unitID");
 
 
-        if ((usertype.equals("Admin")) || (usertype.equals("User"))) // start checking user type
-        {
+        if ((usertype.equals("Admin")) || (usertype.equals("User"))) {
             String upin = request.getParameter("upin");
             String dayFromDate = request.getParameter("dateFrom");
             String dayToDate = request.getParameter("dateTo");
 
-            List<String> dateColumns = new ArrayList<String>();
             List<String> refNos = new ArrayList<String>();
             List<String[]> transformedData = new ArrayList<String[]>();
             List<String[]> refNoAndDate = new ArrayList<String[]>();
@@ -81,8 +64,18 @@
     </tr>
 </table>
 
+
+<form action="eReportHistoricalData.jsp" method="post">
+    <input type="hidden" value="<%=upin%>" name="upin" >
+    <input type="hidden" value="<%=dayFromDate%>" name="dayFromDate" >
+    <input type="hidden" value="<%=dayToDate%>" name="dayToDate" >
+    <%--                    <input type="hidden" value="<%=DateTitle%>" name="TitleDate" >--%>
+
+    <input type="submit" value="Download Excel">
+</form>
+
 <form action="" method="post">
-    <table width="45%" border="0" cellspacing="0" cellpadding="0" class="bodyTable" align="center">
+<%--    <table width="45%" border="0" cellspacing="0" cellpadding="0" class="bodyTable" align="center">--%>
 
             <%
 
@@ -151,8 +144,6 @@
                 int no = 0;
                 String oldTestCode = "";
                 String[] row = new String[0];
-//                System.out.println("gggg2>>>");
-                System.out.println(rsH.isBeforeFirst());
 
                 while (rsH.next()){
                     String invNo = rsH.getString("INVOICE_NO");
@@ -166,11 +157,6 @@
                         refArray[1] = invNo;
                         refNoAndDate.add(refArray);
                     }
-                }
-                System.out.println("refNoAndDate2> ");
-
-                for (String[] refNoAndDate2 : refNoAndDate){
-                    System.out.println(Arrays.toString(refNoAndDate2));
                 }
 
                 final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -190,68 +176,29 @@
             }
         });
 
-                System.out.println("refNoAndDate3> ");
-
-          for (String[] refNoAndDate2 : refNoAndDate){
-                    System.out.println(Arrays.toString(refNoAndDate2));
-                }
-
-                rsH = conn.query(queryH);
+                        rsH = conn.query(queryH);
 
                 while (rsH.next()) {
-//                    System.out.println("got in >J");
 
                     String invNo = rsH.getString("INVOICE_NO");
                     String testCode = rsH.getString("TEST_CODE");
                     String testName = rsH.getString("TEST_NAME");
                     String units = rsH.getString("UNITS");
                     String normalRange = rsH.getString("NORMAL_RANGE");
-//                    String patientType = rsH.getString("PATIENT_TYPE");
-                    String testDate = rsH.getString("TEST_DATE");
                     String result = rsH.getString("RESULTS");
-
-//                    if (!dateColumns.contains(testDate)) {
-//                        dateColumns.add(testDate);
-//
-//                        Collections.sort(dateColumns);
-//                        for(int i = 0; i < dateColumns.size(); i++) {
-//                            if (i==0){
-//                            System.out.print("Date array : ");
-//                            }
-//                          System.out.print(dateColumns.get(i) + ", ");
-//                        }
-////                        System.out.println("date array>> "+dateColumns.toString());
-//
-//                        String[] newRow = new String[row.length + 1];
-//                        for(int n = 0; n < row.length; n++) {
-//                          newRow[n] = row[n];
-//                        }
-//                        row = newRow;
-//                    }
-
-//                    if (!refNos.contains(invNo)){
-//                        refNos.add(invNo);
-//                        String[] refArray = new String[2];
-//                        refArray[0] = testDate;
-//                        refArray[1] = invNo;
-//                        refNoAndDate.add(refArray);
-//                    }
 
                     if (!oldTestCode.equals(testCode)){
                         no++;
                         if (no != 1){
                             transformedData.add(row);
                         }
-//                    }
                     row = new String[5 + refNoAndDate.size()];
-                    row[0] = no+".)";
+                    row[0] = no+")";
                     row[1] = testCode;
                     row[2] = testName;
                     row[3] = units;
                     row[4] = normalRange;
-//                    row[4] = patientType;
                     oldTestCode = testCode;
-//                    transformedData.add(row);
                     }
 
                     for(int i = 0; i < refNoAndDate.size(); i++) {
@@ -260,12 +207,6 @@
                       }
                     }
 
-//                    int dateIndex = dateColumns.indexOf(testDate) + 5;
-//                    row[dateIndex] = result;
-//                    System.out.println("row array : "+ Arrays.toString(row));
-
-//                    transformedData.add(row);
-//                    no++;
                 }
                 if (row[0] != null){
                     transformedData.add(row);
@@ -288,34 +229,20 @@
             <tr height="22" class="tableTitle" valign="middle">
                 <th align="left">#</th>
                 <th align="left">Test Code</th>
-                <th align="left">Test Name</th>
-                <th align="left">Unit</th>
-                <th align="left">Normal Range</th>
-                <%--                <th>Patient Type</th>--%>
+                <th align="left" width="250px">Test Name</th>
+                <th align="left" width="110px">Unit</th>
+                <th align="left" width="110px">Normal Range</th>
                 <%
-
-
                     for (int i = 0; i < refNoAndDate.size(); i++) {
                 %>
                 <th align="center">
                     <%=
-                        refNoAndDate.get(i)[0]
-                                %>
+                    refNoAndDate.get(i)[0]
+                    %>
                     <br>
                     <%=
-                        refNoAndDate.get(i)[1]
-                     %>
-<%--                    <br>--%>
-
-<%--                    <%--%>
-<%--                        for (int t = 0; t < refNoAndDate.size(); t++) {--%>
-<%--                            String[] refArray2 = refNoAndDate.get(t);--%>
-<%--                            if (refArray2[0].equals(dateColumns.get(i))) {--%>
-<%--                                out.println(refArray2[1]);--%>
-<%--                            }--%>
-<%--                        }--%>
-<%--                    %>--%>
-
+                    refNoAndDate.get(i)[1]
+                    %>
                 </th>
                 <%
                     }
@@ -324,14 +251,9 @@
             </thead>
             <tbody>
             <%
-//                String[] row2 = new String[dateColumns.size() + 5];
                 String align = "";
                 for (int j = 0; j < transformedData.size(); j++) {
                     String[] row = transformedData.get(j);
-
-//                    for (int k = 0; k < row.length; k++) {
-//                        row2[k] = row[k];
-//                    }
             %>
             <tr>
                 <%
